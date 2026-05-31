@@ -1,0 +1,411 @@
+openapi: 3.0.3
+info:
+  title: Credit Card Service API
+  version: 1.0.0
+  description: API para la gestión de tarjetas de crédito bancarias.
+
+servers:
+  - url: http://localhost:8084
+    description: Local credit-card-service
+
+tags:
+  - name: CreditCards
+    description: Operaciones de gestión de tarjetas de crédito
+
+paths:
+  /api/v1/credit-cards:
+    post:
+      tags:
+        - CreditCards
+      summary: Create credit card
+      operationId: createCreditCard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditCardRequest'
+      responses:
+        '201':
+          description: Credit card created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCardResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Business rule conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags:
+        - CreditCards
+      summary: Find all credit cards
+      operationId: findAllCreditCards
+      responses:
+        '200':
+          description: Credit cards found successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreditCardResponse'
+
+  /api/v1/credit-cards/{id}:
+    get:
+      tags:
+        - CreditCards
+      summary: Find credit card by id
+      operationId: findCreditCardById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Credit card unique identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Credit card found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCardResponse'
+        '404':
+          description: Credit card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - CreditCards
+      summary: Update credit card
+      operationId: updateCreditCard
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Credit card unique identifier
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditCardRequest'
+      responses:
+        '200':
+          description: Credit card updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCardResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Credit card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Business rule conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - CreditCards
+      summary: Delete credit card
+      operationId: deleteCreditCard
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Credit card unique identifier
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Credit card deleted successfully
+        '404':
+          description: Credit card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/credit-cards/{id}/charges:
+    post:
+      tags:
+        - CreditCards
+      summary: Charge credit card
+      operationId: chargeCreditCard
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Credit card unique identifier
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditCardChargeRequest'
+      responses:
+        '200':
+          description: Charge registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCardResponse'
+        '400':
+          description: Invalid charge
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Credit card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Credit limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/credit-cards/{id}/payments:
+    post:
+      tags:
+        - CreditCards
+      summary: Pay credit card
+      operationId: payCreditCard
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Credit card unique identifier
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditCardPaymentRequest'
+      responses:
+        '200':
+          description: Payment registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCardResponse'
+        '400':
+          description: Invalid payment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Credit card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Business rule conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/credit-cards/{id}/balance:
+    get:
+      tags:
+        - CreditCards
+      summary: Get credit card balance
+      operationId: getCreditCardBalance
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Credit card unique identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Credit card balance found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCardBalanceResponse'
+        '404':
+          description: Credit card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/credit-cards/customer/{customerId}:
+    get:
+      tags:
+        - CreditCards
+      summary: Find credit cards by customer id
+      operationId: findCreditCardsByCustomerId
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          description: Customer unique identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Customer credit cards found successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreditCardResponse'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    CreditCardRequest:
+      type: object
+      required:
+        - customerId
+        - cardType
+        - creditLimit
+      properties:
+        customerId:
+          type: string
+          example: "665f1a2b9c1d4e001234abcd"
+        cardType:
+          type: string
+          example: "PERSONAL"
+          description: "Allowed values: PERSONAL, BUSINESS"
+        creditLimit:
+          type: number
+          format: double
+          example: 3000.00
+
+    CreditCardResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "995f1a2b9c1d4e001234abcd"
+        customerId:
+          type: string
+          example: "665f1a2b9c1d4e001234abcd"
+        cardNumber:
+          type: string
+          example: "CARD-AB12CD34"
+        cardType:
+          type: string
+          example: "PERSONAL"
+        creditLimit:
+          type: number
+          format: double
+          example: 3000.00
+        usedAmount:
+          type: number
+          format: double
+          example: 500.00
+        availableBalance:
+          type: number
+          format: double
+          example: 2500.00
+        active:
+          type: boolean
+          example: true
+
+    CreditCardChargeRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: number
+          format: double
+          example: 150.00
+
+    CreditCardPaymentRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: number
+          format: double
+          example: 200.00
+
+    CreditCardBalanceResponse:
+      type: object
+      properties:
+        creditCardId:
+          type: string
+          example: "995f1a2b9c1d4e001234abcd"
+        cardNumber:
+          type: string
+          example: "CARD-AB12CD34"
+        creditLimit:
+          type: number
+          format: double
+          example: 3000.00
+        usedAmount:
+          type: number
+          format: double
+          example: 500.00
+        availableBalance:
+          type: number
+          format: double
+          example: 2500.00
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "CREDIT_CARD_NOT_FOUND"
+        message:
+          type: string
+          example: "Credit card not found"
+        path:
+          type: string
+          example: "/api/v1/credit-cards/995f1a2b9c1d4e001234abcd"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-05-29T12:30:00"
