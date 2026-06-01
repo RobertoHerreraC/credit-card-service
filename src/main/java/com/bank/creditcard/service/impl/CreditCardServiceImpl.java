@@ -142,13 +142,21 @@ public class CreditCardServiceImpl implements CreditCardService {
         log.info("Paying credit card with id: {}", id);
 
         BigDecimal paymentAmount = validatePaymentAmount(request);
+
         return Single.fromPublisher(
                         creditCardRepository.findByIdAndActiveTrue(id)
                                 .switchIfEmpty(Mono.error(new CreditCardNotFoundException(id)))
                 )
                 .map(creditCard -> applyPayment(creditCard, paymentAmount))
                 .flatMap(creditCard ->
-                        Single.fromPublisher(creditCardRepository.save(creditCard)))
+                        Single.fromPublisher(creditCardRepository.save(creditCard))
+                )
+                .flatMap(savedCard ->
+                        Single.fromPublisher(
+                                registerCreditCardPaymentMovement(savedCard, paymentAmount)
+                                        .thenReturn(savedCard)
+                        )
+                )
                 .map(creditCardMapper::toResponse)
                 .doOnSuccess(response ->
                         log.info("Payment registered successfully for credit card id: {}", id));
@@ -297,6 +305,22 @@ public class CreditCardServiceImpl implements CreditCardService {
                 .movementType("CREDIT_CARD_CHARGE")
                 .amount(chargeAmount.doubleValue())
                 .description("Credit card charge")
+                .build();
+
+        return movementClient.createMovement(movementRequest);
+    }
+
+    private Mono<Void> registerCreditCardPaymentMovement(
+            CreditCard creditCard,
+            BigDecimal paymentAmount) {
+
+        MovementRequest movementRequest = MovementRequest.builder()
+                .customerId(creditCard.getCustomerId())
+                .productId(creditCard.getId())
+                .productType("CREDIT_CARD")
+                .movementType("CREDIT_CARD_PAYMENT")
+                .amount(paymentAmount.doubleValue())
+                .description("Credit card payment")
                 .build();
 
         return movementClient.createMovement(movementRequest);
