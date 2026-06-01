@@ -1,6 +1,6 @@
 package com.bank.creditcard.client;
 
-import com.bank.creditcard.client.dto.CustomerResponse;
+import com.bank.creditcard.client.customer.dto.CustomerResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
