@@ -1,4 +1,4 @@
-package com.bank.creditcard.client;
+package com.bank.creditcard.client.customer;
 
 import com.bank.creditcard.client.customer.dto.CustomerResponse;
 import lombok.RequiredArgsConstructor;

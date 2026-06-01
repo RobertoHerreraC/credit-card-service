@@ -1,8 +1,10 @@
 package com.bank.creditcard.service.impl;
 
 import com.bank.creditcard.api.dto.*;
-import com.bank.creditcard.client.CustomerClient;
-import com.bank.creditcard.client.dto.CustomerResponse;
+import com.bank.creditcard.client.customer.CustomerClient;
+import com.bank.creditcard.client.customer.dto.CustomerResponse;
+import com.bank.creditcard.client.movement.MovementClient;
+import com.bank.creditcard.client.movement.dto.MovementRequest;
 import com.bank.creditcard.domain.CreditCard;
 import com.bank.creditcard.domain.CreditCardType;
 import com.bank.creditcard.domain.CustomerType;
@@ -33,6 +35,7 @@ public class CreditCardServiceImpl implements CreditCardService {
     private final CreditCardRepository creditCardRepository;
     private final CreditCardMapper creditCardMapper;
     private final CustomerClient customerClient;
+    private final MovementClient movementClient;
 
     @Override
     public Single<CreditCardResponse> create(CreditCardRequest request) {
@@ -121,7 +124,14 @@ public class CreditCardServiceImpl implements CreditCardService {
                 )
                 .map(creditCard -> applyCharge(creditCard, chargeAmount))
                 .flatMap(creditCard ->
-                        Single.fromPublisher(creditCardRepository.save(creditCard)))
+                        Single.fromPublisher(creditCardRepository.save(creditCard))
+                )
+                .flatMap(savedCard ->
+                        Single.fromPublisher(
+                                registerCreditCardChargeMovement(savedCard, chargeAmount)
+                                        .thenReturn(savedCard)
+                        )
+                )
                 .map(creditCardMapper::toResponse)
                 .doOnSuccess(response ->
                         log.info("Charge registered successfully for credit card id: {}", id));
@@ -274,5 +284,21 @@ public class CreditCardServiceImpl implements CreditCardService {
 
     private BigDecimal defaultBigDecimal(BigDecimal value) {
         return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private Mono<Void> registerCreditCardChargeMovement(
+            CreditCard creditCard,
+            BigDecimal chargeAmount) {
+
+        MovementRequest movementRequest = MovementRequest.builder()
+                .customerId(creditCard.getCustomerId())
+                .productId(creditCard.getId())
+                .productType("CREDIT_CARD")
+                .movementType("CREDIT_CARD_CHARGE")
+                .amount(chargeAmount.doubleValue())
+                .description("Credit card charge")
+                .build();
+
+        return movementClient.createMovement(movementRequest);
     }
 }
